@@ -38,6 +38,7 @@ query_prometheus = Tool(
     content="""
 pip install argparse > /dev/null 2>&1
 pip install requests > /dev/null 2>&1
+pip install pandas > /dev/null 2>&1
 python /tmp/main.py
 """,
     with_files=[

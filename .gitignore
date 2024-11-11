@@ -3,3 +3,5 @@
 .idea
 
 poetry.toml
+
+graph.ipynb

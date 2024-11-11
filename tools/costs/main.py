@@ -26,6 +26,19 @@ def filter_namespace_data(data):
     return result
 
 
+def print_pandas_table(data):
+    """
+    Prints the input data as a pandas DataFrame.
+
+    Parameters:
+    - data: The input data to print as a pandas DataFrame.
+    """
+    import pandas as pd
+
+    df = pd.DataFrame(data).T
+    print(df)
+
+
 def query_prometheus(prometheus_url, query, timeout='30s'):
     """
     Queries Prometheus for a given metric.
@@ -47,7 +60,10 @@ def query_prometheus(prometheus_url, query, timeout='30s'):
         response.raise_for_status()  # Raise an error for failed requests
         data = response.json()
         if data['status'] == 'success':
-            return filter_namespace_data(data['data'])
+            structured_data = filter_namespace_data(data['data'])
+            sorted_data = sorted(structured_data.items(), key=lambda item: item[1]['totalCost'], reverse=True)
+            print_pandas_table(sorted_data)
+            return
         else:
             raise Exception(f"Query failed with status: {data['status']}")
     except requests.exceptions.RequestException as e:
