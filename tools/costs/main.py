@@ -17,7 +17,8 @@ def filter_namespace_data(data):
     Returns:
     - JSON structure with the filtered data.
     """
-    fields = ["cpuEfficiency", "ramEfficiency", "totalEfficiency", "cpuCost", "ramCost", "totalCost"]
+    # fields = ["cpuEfficiency", "ramEfficiency", "totalEfficiency", "cpuCost", "ramCost", "totalCost"]
+    fields = ["totalCost"]
 
     result = {
         namespace: {field: metrics.get(field) for field in fields}
@@ -36,7 +37,7 @@ def print_pandas_table(data):
     import pandas as pd
 
     df = pd.DataFrame(data).T
-    print(df)
+    df.head()
 
 
 def query_prometheus(prometheus_url, query, timeout='30s'):
@@ -62,8 +63,8 @@ def query_prometheus(prometheus_url, query, timeout='30s'):
         if data['status'] == 'success':
             structured_data = filter_namespace_data(data['data'])
             sorted_data = sorted(structured_data.items(), key=lambda item: item[1]['totalCost'], reverse=True)
-            print_pandas_table(sorted_data)
-            return
+            # print_pandas_table(sorted_data)
+            return sorted_data
         else:
             raise Exception(f"Query failed with status: {data['status']}")
     except requests.exceptions.RequestException as e:
@@ -77,5 +78,4 @@ if __name__ == "__main__":
     query = 'up{job="prometheus"}'
 
     prometheus_query_results = query_prometheus(prometheus_url, query)
-    print("Prometheus query results:", prometheus_query_results)
-
+    print("Highest cost namespaces:", prometheus_query_results)
