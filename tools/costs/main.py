@@ -36,7 +36,7 @@ def query_prometheus(prometheus_url, query, timeout='30s'):
 
 if __name__ == "__main__":
     # Get env vars
-    prometheus_url = 'http://prometheus-system.prometheus-server'
+    prometheus_url = 'http://prometheus-server.prometheus-system'
     query = 'up{job="prometheus"}'
 
     prometheus_query_results = query_prometheus(prometheus_url, query)
