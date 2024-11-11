@@ -6,6 +6,26 @@ def hello_world(name: str):
     print(f"Hello, {name}!")
 
 
+def filter_namespace_data(data):
+    """
+    Filters the input data for all namespaces found in the structure and retains specified fields.
+
+    Parameters:
+    - data: The input data containing metrics for various namespaces.
+    - fields: List of fields to keep in the output.
+
+    Returns:
+    - JSON structure with the filtered data.
+    """
+    fields = ["cpuEfficiency", "ramEfficiency", "totalEfficiency", "cpuCost", "ramCost", "totalCost"]
+
+    result = {
+        namespace: {field: metrics.get(field) for field in fields}
+        for namespace, metrics in data[0].items() if metrics.get("properties", {}).get("namespace")
+    }
+    return result
+
+
 def query_prometheus(prometheus_url, query, timeout='30s'):
     """
     Queries Prometheus for a given metric.
@@ -27,7 +47,7 @@ def query_prometheus(prometheus_url, query, timeout='30s'):
         response.raise_for_status()  # Raise an error for failed requests
         data = response.json()
         if data['status'] == 'success':
-            return data
+            return filter_namespace_data(data['data'])
         else:
             raise Exception(f"Query failed with status: {data['status']}")
     except requests.exceptions.RequestException as e:
