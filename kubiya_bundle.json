@@ -51,7 +51,7 @@
       "alias": null,
       "description": "Query for highest cost kubernetes namespaces",
       "type": "docker",
-      "content": "\npip install argparse > /dev/null 2>&1\npip install requests > /dev/null 2>&1\npip install pandas > /dev/null 2>&1\npip install slack-sdk==3.11.0 > /dev/null 2>&1\npython /tmp/main.py\n",
+      "content": "\npip install argparse > /dev/null 2>&1\npip install requests > /dev/null 2>&1\npip install pandas > /dev/null 2>&1\npip install slack-sdk==3.11.0 > /dev/null 2>&1\npip install dataframe-image  > /dev/null 2>&1\npython /tmp/main.py\n",
       "content_url": null,
       "args": [],
       "env": [],
