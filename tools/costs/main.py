@@ -142,9 +142,12 @@ def query_prometheus(timeout='30s'):
 
 if __name__ == "__main__":
 
-    if os.getenv("SLACK_API_TOKEN"):
+    slack_token = os.getenv("SLACK_API_TOKEN")
+    if slack_token:
         print("Slack API token found")
         sys.exit(1)
+
+    print("slack_token", slack_token)
 
     prometheus_query_results = query_prometheus()
     print("Highest cost namespaces:", prometheus_query_results)
