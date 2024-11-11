@@ -18,7 +18,7 @@ def filter_namespace_data(data):
     - JSON structure with the filtered data.
     """
     # fields = ["cpuEfficiency", "ramEfficiency", "totalEfficiency", "cpuCost", "ramCost", "totalCost"]
-    fields = ["totalCost"]
+    fields = ["cpuEfficiency", "ramEfficiency", "totalCost"]
 
     result = {
         namespace: {field: metrics.get(field) for field in fields}
