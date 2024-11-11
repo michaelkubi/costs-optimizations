@@ -56,7 +56,7 @@ def slack_result_image_to_slack(data):
     df = pd.DataFrame(data).T
 
     # Create a figure and axis
-    fig, ax = plt.subplots(figsize=(6, 2))  # Adjust figure size as needed
+    fig, ax = plt.subplots(figsize=(6, 10))  # Adjust figure size as needed
     ax.axis('off')  # Hide the axes
 
     # Create a table with matplotlib
