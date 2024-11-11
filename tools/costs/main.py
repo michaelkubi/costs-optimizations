@@ -143,7 +143,7 @@ def query_prometheus(timeout='30s'):
 if __name__ == "__main__":
 
     slack_token = os.getenv("SLACK_API_TOKEN")
-    if slack_token:
+    if not slack_token:
         print("Slack API token found")
         sys.exit(1)
 
