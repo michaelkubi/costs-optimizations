@@ -38,4 +38,36 @@ python /tmp/main.py "{{ .name }}"
     ],
 )
 
+query_prometheus = Tool(
+    name="query_prometheus",
+    type="docker",
+    image="python:3.11",
+    description="Query Prometheus",
+    args=[],
+    on_build="""
+curl -LsSf https://astral.sh/uv/install.sh | sh > /dev/null 2>&1
+. $HOME/.cargo/env
+
+uv venv > /dev/null 2>&1
+. .venv/bin/activate > /dev/null 2>&1
+
+uv pip install requests > /dev/null 2>&1
+
+if [ -f /tmp/requirements.txt ]; then
+    uv pip install -r /tmp/requirements.txt > /dev/null 2>&1
+fi
+""",
+    content="""
+python /tmp/main.py
+""",
+    with_files=[
+        FileSpec(
+            destination="/tmp/main.py",
+            content=inspect.getsource(main),
+        ),
+    ],
+)
+
 tool_registry.register(hello_tool)
+tool_registry.register(query_prometheus)
+
