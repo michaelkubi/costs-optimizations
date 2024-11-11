@@ -19,7 +19,7 @@ def query_prometheus(prometheus_url, query, timeout='30s'):
     - JSON response from Prometheus with the query results
     """
 
-    cost_metrics_url = "http://localhost:9090/model/allocation/compute"
+    cost_metrics_url = "http://opencost.opencost:9090/model/allocation/compute"
     params = {'window': '7d', 'aggregate': 'namespace', 'includeIdle': 'true', 'step': '1d', 'accumulate': 'true'}
 
     try:
