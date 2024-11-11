@@ -35,12 +35,9 @@ query_prometheus = Tool(
     image="python:3.11",
     description="Query Prometheus",
     args=[],
-    on_build="""
+    content="""
 pip install argparse > /dev/null 2>&1
 pip install requests > /dev/null 2>&1
-python /tmp/main.py
-""",
-    content="""
 python /tmp/main.py
 """,
     with_files=[
