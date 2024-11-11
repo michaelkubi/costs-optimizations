@@ -1,6 +1,11 @@
 import argparse
-import requests
+import sys
 
+import requests
+import dataframe_image as dfi
+import pandas as pd
+import slack_sdk
+import os
 
 def hello_world(name: str):
     print(f"Hello, {name}!")
@@ -18,7 +23,7 @@ def filter_namespace_data(data):
     - JSON structure with the filtered data.
     """
     # fields = ["cpuEfficiency", "ramEfficiency", "totalEfficiency", "cpuCost", "ramCost", "totalCost"]
-    fields = ["cpuEfficiency", "ramEfficiency", "totalCost"]
+    fields = ["cpuEfficiency", "ramEfficiency", "totalEfficiency", "totalCost"]
 
     result = {
         namespace: {field: metrics.get(field) for field in fields}
@@ -34,13 +39,65 @@ def print_pandas_table(data):
     Parameters:
     - data: The input data to print as a pandas DataFrame.
     """
-    import pandas as pd
 
     df = pd.DataFrame(data).T
     df.head()
 
 
-def query_prometheus(prometheus_url, query, timeout='30s'):
+def slack_result_image_to_slack(data):
+    """
+    Sends a result image to a Slack channel.
+
+    Parameters:
+    - image_url (str): URL of the image to send to Slack
+    - slack_token (str): Slack API token
+    - slack_channel (str): Slack channel to send the image to
+    """
+    df = pd.DataFrame(data).T
+    dfi.export(df, 'dataframe.png')
+
+    slack_token = os.getenv("SLACK_API_TOKEN")
+
+    client = slack_sdk.WebClient(token=slack_token)
+
+    try:
+        response = client.files_upload(
+            channels="D05T1HF3MNZ",
+            file='./dataframe.png',
+            initial_comment="Here is the detailed stats of the namespaces."
+        )
+    except Exception as e:
+        print(f"Failed to send image to Slack: {e}")
+        sys.exit(1)
+
+    if not response["ok"]:
+        print(f"Failed to send image to Slack: {response['error']}")
+
+
+def prettier_data(data):
+    """
+
+    :param data:
+    :return:
+    """
+
+    result = {}
+    for namespace, metrics in data:
+
+        cpu_efficiency = metrics['cpuEfficiency'] * 100
+        ram_efficiency = metrics['ramEfficiency'] * 100
+        total_efficiency = metrics['totalEfficiency'] * 100
+
+        result[namespace] = {
+            "cpuEfficiency": f"{cpu_efficiency:.2f}%",
+            "ramEfficiency": f"{ram_efficiency:.2f}%",
+            "totalEfficiency": f"{total_efficiency:.2f}%",
+            "totalCost": f"${metrics['totalCost']:.2f}"
+        }
+    return result
+
+
+def query_prometheus(timeout='30s'):
     """
     Queries Prometheus for a given metric.
 
@@ -63,8 +120,9 @@ def query_prometheus(prometheus_url, query, timeout='30s'):
         if data['status'] == 'success':
             structured_data = filter_namespace_data(data['data'])
             sorted_data = sorted(structured_data.items(), key=lambda item: item[1]['totalCost'], reverse=True)
-            # print_pandas_table(sorted_data)
-            return sorted_data
+            pretty_data = prettier_data(sorted_data)
+            slack_result_image_to_slack(pretty_data)
+            return pretty_data
         else:
             raise Exception(f"Query failed with status: {data['status']}")
     except requests.exceptions.RequestException as e:
@@ -73,9 +131,10 @@ def query_prometheus(prometheus_url, query, timeout='30s'):
 
 
 if __name__ == "__main__":
-    # Get env vars
-    prometheus_url = 'http://prometheus-server.prometheus-system'
-    query = 'up{job="prometheus"}'
 
-    prometheus_query_results = query_prometheus(prometheus_url, query)
+    if os.getenv("SLACK_API_TOKEN"):
+        print("Slack API token found")
+        sys.exit(1)
+
+    prometheus_query_results = query_prometheus()
     print("Highest cost namespaces:", prometheus_query_results)
