@@ -1,8 +1,8 @@
 import argparse
 import sys
+import matplotlib.pyplot as plt
 
 import requests
-import dataframe_image as dfi
 import pandas as pd
 import slack_sdk
 import os
@@ -54,7 +54,17 @@ def slack_result_image_to_slack(data):
     - slack_channel (str): Slack channel to send the image to
     """
     df = pd.DataFrame(data).T
-    dfi.export(df, 'dataframe.png')
+
+    # Create a figure and axis
+    fig, ax = plt.subplots(figsize=(6, 2))  # Adjust figure size as needed
+    ax.axis('off')  # Hide the axes
+
+    # Create a table with matplotlib
+    table = ax.table(cellText=df.values, colLabels=df.columns, cellLoc='center', loc='center')
+    table.scale(1, 1.5)  # Adjust the scale of the table
+
+    # Save the table as an image
+    plt.savefig("dataframe_matplotlib.png")
 
     slack_token = os.getenv("SLACK_API_TOKEN")
 
@@ -63,7 +73,7 @@ def slack_result_image_to_slack(data):
     try:
         response = client.files_upload(
             channels="D05T1HF3MNZ",
-            file='./dataframe.png',
+            file='./dataframe_matplotlib.png',
             initial_comment="Here is the detailed stats of the namespaces."
         )
     except Exception as e:
