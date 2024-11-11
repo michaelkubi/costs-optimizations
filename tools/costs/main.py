@@ -35,17 +35,8 @@ def query_prometheus(prometheus_url, query, timeout='30s'):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Print hello {name}!")
-    parser.add_argument("name", help="Name to say hello to")
-
-    # Parse command-line arguments
-    args = parser.parse_args()
-
-    # Get coordinates for the given city
-    name = args.name
-
     # Get env vars
-    prometheus_url = 'http://prometheus-server.prometheus-server:9090'
+    prometheus_url = 'http://prometheus-system.prometheus-server'
     query = 'up{job="prometheus"}'
 
     prometheus_query_results = query_prometheus(prometheus_url, query)
