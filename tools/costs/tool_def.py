@@ -64,6 +64,9 @@ pip install requests > /dev/null 2>&1
 pip install pandas > /dev/null 2>&1
 pip install slack-sdk==3.11.0 > /dev/null 2>&1
 pip install matplotlib > /dev/null 2>&1
+pip install -U kaleido > /dev/null 2>&1
+pip install -U plotly > /dev/null 2>&1
+pip install numpy > /dev/null 2>&1
 python /tmp/main.py
 """,
     with_files=[

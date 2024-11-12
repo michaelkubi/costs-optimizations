@@ -6,6 +6,8 @@ import requests
 import pandas as pd
 import slack_sdk
 import os
+import plotly.express as px
+import numpy as np
 
 def hello_world(name: str):
     print(f"Hello, {name}!")
@@ -57,6 +59,8 @@ def slack_result_image_to_slack(data):
 
     # Create a figure and axis
     fig, ax= plt.subplots(figsize=(6, 10))  # Adjust figure size as needed
+
+
     ax.axis('off')  # Hide the axes
 
     # Create a table with matplotlib
@@ -74,6 +78,51 @@ def slack_result_image_to_slack(data):
         response = client.files_upload(
             channels="D05T1HF3MNZ",
             file='./dataframe_matplotlib.png',
+            initial_comment="Here is the detailed stats of the namespaces."
+        )
+    except Exception as e:
+        print(f"Failed to send image to Slack: {e}")
+        sys.exit(1)
+
+    if not response["ok"]:
+        print(f"Failed to send image to Slack: {response['error']}")
+
+
+def generate_treemap(data):
+    # Convert JSON to DataFrame
+    df = pd.DataFrame.from_dict(data, orient='index').reset_index().rename(columns={'index': 'namespace'})
+
+    # Remove percentage and dollar signs, and convert to numeric
+    df['cpuEfficiency'] = df['cpuEfficiency'].str.replace('%', '').astype(float)
+    df['ramEfficiency'] = df['ramEfficiency'].str.replace('%', '').astype(float)
+    df['totalEfficiency'] = df['totalEfficiency'].str.replace('%', '').astype(float)
+    df['totalCost'] = df['totalCost'].str.replace('$', '').astype(float)
+
+    # Create the treemap using Plotly
+    fig = px.treemap(
+        df,
+        path=[px.Constant("Namespaces"), 'namespace'],  # Hierarchical path
+        values='totalCost',  # Block size based on total cost
+        color='totalEfficiency',  # Color based on total efficiency
+        hover_data={'cpuEfficiency': True, 'ramEfficiency': True},  # Additional hover info
+        color_continuous_scale='RdYlGn',  # Green to red color scale
+        color_continuous_midpoint=np.average(df['totalEfficiency'], weights=df['totalCost'])
+    )
+
+    # Update layout
+    fig.update_layout(margin=dict(t=50, l=25, r=25, b=25), title='Namespace Cost and Efficiency Treemap')
+
+    # Save the figure as a PNG image
+    fig.write_image("namespace_treemap.png")
+
+    slack_token = os.getenv("SLACK_API_TOKEN")
+
+    client = slack_sdk.WebClient(token=slack_token)
+
+    try:
+        response = client.files_upload(
+            channels="D05T1HF3MNZ",
+            file='./namespace_treemap.png',
             initial_comment="Here is the detailed stats of the namespaces."
         )
     except Exception as e:
@@ -132,6 +181,7 @@ def query_prometheus(timeout='30s'):
             sorted_data = sorted(structured_data.items(), key=lambda item: item[1]['totalCost'], reverse=True)
             pretty_data = prettier_data(sorted_data)
             slack_result_image_to_slack(pretty_data)
+            generate_treemap(pretty_data)
             return pretty_data
         else:
             raise Exception(f"Query failed with status: {data['status']}")
