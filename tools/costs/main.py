@@ -98,6 +98,12 @@ def generate_treemap(data):
     df['totalEfficiency'] = df['totalEfficiency'].str.replace('%', '').astype(float)
     df['totalCost'] = df['totalCost'].str.replace('$', '').astype(float)
 
+    # Check if the weights sum to zero and handle it
+    if df['totalCost'].sum() == 0:
+        color_midpoint = df['totalEfficiency'].mean()  # Use unweighted mean as a fallback
+    else:
+        color_midpoint = np.average(df['totalEfficiency'], weights=df['totalCost'])
+
     # Create the treemap using Plotly
     fig = px.treemap(
         df,
@@ -106,7 +112,7 @@ def generate_treemap(data):
         color='totalEfficiency',  # Color based on total efficiency
         hover_data={'cpuEfficiency': True, 'ramEfficiency': True},  # Additional hover info
         color_continuous_scale='RdYlGn',  # Green to red color scale
-        color_continuous_midpoint=np.average(df['totalEfficiency'], weights=df['totalCost'])
+        color_continuous_midpoint=color_midpoint
     )
 
     # Update layout
@@ -180,7 +186,7 @@ def query_prometheus(timeout='30s'):
             structured_data = filter_namespace_data(data['data'])
             sorted_data = sorted(structured_data.items(), key=lambda item: item[1]['totalCost'], reverse=True)
             pretty_data = prettier_data(sorted_data)
-            slack_result_image_to_slack(pretty_data)
+            # slack_result_image_to_slack(pretty_data)
             generate_treemap(pretty_data)
             return pretty_data
         else:
