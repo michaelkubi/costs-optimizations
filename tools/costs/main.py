@@ -92,28 +92,45 @@ def generate_treemap(data):
     # Convert JSON to DataFrame
     df = pd.DataFrame.from_dict(data, orient='index').reset_index().rename(columns={'index': 'namespace'})
 
+    # Convert JSON to DataFrame
+    df = pd.DataFrame.from_dict(json_data, orient='index').reset_index().rename(columns={'index': 'namespace'})
+
     # Remove percentage and dollar signs, and convert to numeric
     df['cpuEfficiency'] = df['cpuEfficiency'].str.replace('%', '').astype(float)
     df['ramEfficiency'] = df['ramEfficiency'].str.replace('%', '').astype(float)
     df['totalEfficiency'] = df['totalEfficiency'].str.replace('%', '').astype(float)
     df['totalCost'] = df['totalCost'].str.replace('$', '').astype(float)
 
-    # Check if the weights sum to zero and handle it
-    if df['totalCost'].sum() == 0:
-        color_midpoint = df['totalEfficiency'].mean()  # Use unweighted mean as a fallback
-    else:
-        color_midpoint = np.average(df['totalEfficiency'], weights=df['totalCost'])
+    # Replace zero or NaN values in totalCost with a small positive number
+    df['totalCost'] = df['totalCost'].replace(0, 0.01).fillna(0.01)
+    df['totalEfficiency'] = df['totalEfficiency'].replace(0, 0.01).fillna(0.01)
 
-    # Create the treemap using Plotly
+    # Add $ and % symbols for hover data
+    df['Total Cost'] = df['totalCost'].apply(lambda x: f"${x:.2f}")
+    df['CPU Efficiency'] = df['cpuEfficiency'].apply(lambda x: f"{x:.2f}%")
+    df['RAM Efficiency'] = df['ramEfficiency'].apply(lambda x: f"{x:.2f}%")
+    df['Total Efficiency'] = df['totalEfficiency'].apply(lambda x: f"{x:.2f}%")
+
+    # Create the treemap using Plotly with formatted hover data
     fig = px.treemap(
         df,
         path=[px.Constant("Namespaces"), 'namespace'],  # Hierarchical path
         values='totalCost',  # Block size based on total cost
         color='totalEfficiency',  # Color based on total efficiency
-        hover_data={'cpuEfficiency': True, 'ramEfficiency': True},  # Additional hover info
-        color_continuous_scale='RdYlGn',  # Green to red color scale
-        color_continuous_midpoint=color_midpoint
+        hover_data={
+            'Total Cost': True,
+            'CPU Efficiency': True,
+            'RAM Efficiency': True,
+            'Total Efficiency': True,
+            'totalCost': False,
+            'totalEfficiency': False,
+        },  # Use formatted values for hover
+        color_continuous_scale='RdYlGn_r',  # Green to red color scale
+        # color_continuous_midpoint=50 #np.average(df['totalEfficiency'], weights=df['totalCost']) # Set midpoint for color scale
     )
+
+    # Update layout
+    fig.update_layout(margin=dict(t=50, l=25, r=25, b=25), title='Namespace Cost and Efficiency Treemap')
 
     # Update layout
     fig.update_layout(margin=dict(t=50, l=25, r=25, b=25), title='Namespace Cost and Efficiency Treemap')
