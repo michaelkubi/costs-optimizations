@@ -92,9 +92,6 @@ def generate_treemap(data):
     # Convert JSON to DataFrame
     df = pd.DataFrame.from_dict(data, orient='index').reset_index().rename(columns={'index': 'namespace'})
 
-    # Convert JSON to DataFrame
-    df = pd.DataFrame.from_dict(json_data, orient='index').reset_index().rename(columns={'index': 'namespace'})
-
     # Remove percentage and dollar signs, and convert to numeric
     df['cpuEfficiency'] = df['cpuEfficiency'].str.replace('%', '').astype(float)
     df['ramEfficiency'] = df['ramEfficiency'].str.replace('%', '').astype(float)
